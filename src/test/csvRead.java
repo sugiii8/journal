@@ -7,51 +7,60 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.StringTokenizer;
 
 public class csvRead {
 	public static void main(String[] args) {
 
+		final int COL_TITLE = 8;
 		final int COL_PRICE = 9;
 		final int COL_PRICE_TAX = 10;
 		BufferedReader br = null;			
-		BufferedWriter bw = null;
-
+//		BufferedWriter bw = null;
+		PrintWriter pw = null;
+		
 		try {
 
 			FileInputStream in = new FileInputStream("in/test.csv");
-			InputStreamReader sr = new InputStreamReader(in, "SJIS"); // yayaoi format
+			InputStreamReader sr = new InputStreamReader(in, "Shift_JIS"); // yayaoi format
 
 			br = new BufferedReader(sr);			
-			bw = new BufferedWriter(new FileWriter("out/result.csv"));
+//			bw = new BufferedWriter(new FileWriter("out/result.csv"));
+			pw = new PrintWriter(new BufferedWriter(new FileWriter("out/result.csv")));
+//			pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream("out/result.csv"),"Shift_JIS")));
 
 			String line = "";
-			double result = 0;
+			String result = "";
 			while ((line = br.readLine()) != null) {
 				int idx = 0; 
+				System.out.println(line);
 				StringTokenizer st = new StringTokenizer(line, ",");
 				while (st.hasMoreTokens()) {
 					idx++;		
 					if (idx > 1) {
-						bw.write(",");
+						pw.write(",");
 					}
-					if (idx == COL_PRICE) {
+					if (idx == COL_TITLE) {
+						st.nextToken();						
+						pw.write("\"課対仕入内8%\"");	
+					} else if (idx == COL_PRICE) {
 						// calc tax-inclusive
 						String token = st.nextToken();
 						int price = Integer.parseInt(token);
 						result = calcTaxInclusive(price, 1.08);
-						bw.write(token);						
+						pw.write(token);						
 					} else if (idx == COL_PRICE_TAX) {
 						// set tax-inclusive
 						st.nextToken();
-						bw.write(String.valueOf(result));
-						result = 0; // initialize result
+						pw.write(String.valueOf(result));
+						result = ""; // initialize result
 					} else {
-						bw.write(st.nextToken());						
+						pw.write(st.nextToken());						
 					}
 				}
 				// new line
-				bw.newLine();
+				pw.println();
 				idx = 0;
 			}
 		} catch (FileNotFoundException e) {
@@ -62,20 +71,23 @@ public class csvRead {
 			// close file
 			try {
 				br.close();
-				bw.close();			
+				pw.close();			
 			} catch (Exception e) {}
 		}
 	}
 	
 	// calc tax-inclusize
-	private static double calcTaxInclusive(int price, double rate) {
+	private static String calcTaxInclusive(int price, double rate) {
 		double result;
 		
 		double ex = price/rate;
 		result = price - ex;
 		result = Math.floor(result);
 		
-		return result;
+		String resultStr = String.valueOf(result);
+		resultStr = resultStr.substring(0, resultStr.length() - 2);
+		System.out.println(resultStr);
+		return resultStr;
 		
 	}
 
